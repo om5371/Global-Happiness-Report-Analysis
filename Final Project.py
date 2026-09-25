@@ -1,3 +1,4 @@
+import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
@@ -6,12 +7,17 @@ import seaborn as sns
 # 1. LOAD DATASET
 # =========================================================
 
+st.title("Global Happiness Report Analysis")
+
 file_path = "2015.csv"
 
 df = pd.read_csv(file_path)
 
-print("Dataset loaded successfully!")
-print("Dataset Shape:", df.shape)
+st.success("Dataset loaded successfully!")
+
+st.write("Dataset Shape:", df.shape)
+
+st.dataframe(df)
 
 
 # =========================================================
