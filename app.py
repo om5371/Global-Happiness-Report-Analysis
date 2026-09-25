@@ -9,168 +9,130 @@ st.set_page_config(
     layout="wide"
 )
 
+# ==========================================
+# GLOBAL HAPPINESS REPORT ANALYSIS
+# ==========================================
+
 st.title("🌍 Global Happiness Report Analysis")
-st.write("Analysis of the 2015 World Happiness dataset")
+st.write("World Happiness Report - 2019")
 
-# -------------------- LOAD DATA --------------------
+# ------------------------------------------
+# 1. Load Dataset
+# ------------------------------------------
 
-file_path = "2015.csv"
+file_path = "2019.csv"
 
 try:
     df = pd.read_csv(file_path)
 except FileNotFoundError:
-    st.error("2015.csv not found. Put 2015.csv in the same folder as this app.py file.")
+    st.error("2019.csv not found. Upload 2019.csv to the same GitHub folder as app.py.")
     st.stop()
 
 df.columns = df.columns.str.strip()
 
-# -------------------- RENAME COLUMNS --------------------
+st.success("Dataset Loaded Successfully!")
 
-column_mapping = {}
+# ------------------------------------------
+# Sidebar
+# ------------------------------------------
 
-for col in df.columns:
-    clean_col = col.lower().strip()
+st.sidebar.title("📌 Analysis Menu")
 
-    if "happiness score" in clean_col:
-        column_mapping[col] = "Happiness_Score"
-    elif "economy" in clean_col and "gdp" in clean_col:
-        column_mapping[col] = "Economy_GDP"
-    elif "family" in clean_col:
-        column_mapping[col] = "Family"
-    elif "health" in clean_col and "life" in clean_col:
-        column_mapping[col] = "Health_Life_Expectancy"
-    elif "freedom" in clean_col:
-        column_mapping[col] = "Freedom"
-    elif "trust" in clean_col or "government corruption" in clean_col:
-        column_mapping[col] = "Trust_Government_Corruption"
-    elif "generosity" in clean_col:
-        column_mapping[col] = "Generosity"
-    elif "region" in clean_col:
-        column_mapping[col] = "Region"
-    elif clean_col == "country":
-        column_mapping[col] = "Country"
-
-df.rename(columns=column_mapping, inplace=True)
-
-numeric_columns = [
-    "Happiness_Score",
-    "Economy_GDP",
-    "Family",
-    "Health_Life_Expectancy",
-    "Freedom",
-    "Trust_Government_Corruption",
-    "Generosity"
-]
-
-for column in numeric_columns:
-    if column in df.columns:
-        df[column] = pd.to_numeric(df[column], errors="coerce")
-
-required_columns = [
-    column for column in numeric_columns
-    if column in df.columns
-]
-
-df = df.dropna(subset=["Happiness_Score"])
-
-# -------------------- SIDEBAR --------------------
-
-st.sidebar.title("📌 Navigation")
-
-page = st.sidebar.radio(
-    "Choose Analysis",
+choice = st.sidebar.radio(
+    "Select Option",
     [
         "Dashboard",
         "Dataset",
+        "Top & Bottom Countries",
+        "Correlation Analysis",
         "Happiness Factors",
-        "Country Analysis",
-        "Regional Analysis",
-        "Correlation Heatmap"
+        "Average Values"
     ]
 )
 
-# -------------------- DASHBOARD --------------------
+# ------------------------------------------
+# Clean Data
+# ------------------------------------------
 
-if page == "Dashboard":
+df = df.dropna()
 
-    st.subheader("📊 Dashboard")
+# ------------------------------------------
+# Dashboard
+# ------------------------------------------
+
+if choice == "Dashboard":
+
+    st.header("📊 Dashboard")
 
     col1, col2, col3, col4 = st.columns(4)
 
-    col1.metric(
-        "Countries",
-        len(df)
-    )
+    col1.metric("Countries", df.shape[0])
+    col2.metric("Average Happiness", round(df["Score"].mean(), 2))
+    col3.metric("Highest Score", round(df["Score"].max(), 2))
+    col4.metric("Lowest Score", round(df["Score"].min(), 2))
 
-    col2.metric(
-        "Average Happiness",
-        round(df["Happiness_Score"].mean(), 2)
-    )
+    st.subheader("📋 Dataset Summary")
 
-    col3.metric(
-        "Highest Score",
-        round(df["Happiness_Score"].max(), 2)
-    )
-
-    col4.metric(
-        "Lowest Score",
-        round(df["Happiness_Score"].min(), 2)
-    )
-
-    st.success("Dataset loaded successfully!")
+    st.write("Rows:", df.shape[0])
+    st.write("Columns:", df.shape[1])
 
     st.subheader("🏆 Top 10 Happiest Countries")
 
-    if "Country" in df.columns:
-        top10 = df.nlargest(10, "Happiness_Score")
-
-        st.dataframe(
-            top10[
-                [
-                    col for col in
-                    ["Country", "Region", "Happiness_Score"]
-                    if col in top10.columns
-                ]
-            ],
-            use_container_width=True,
-            hide_index=True
-        )
-
-    st.subheader("📈 Happiness Score Distribution")
-
-    fig, ax = plt.subplots(figsize=(10, 5))
-
-    ax.hist(
-        df["Happiness_Score"],
-        bins=15
-    )
-
-    ax.set_title("Distribution of Happiness Scores - 2015")
-    ax.set_xlabel("Happiness Score")
-    ax.set_ylabel("Number of Countries")
-
-    st.pyplot(fig)
-
-# -------------------- DATASET --------------------
-
-elif page == "Dataset":
-
-    st.subheader("📋 Dataset Overview")
-
-    col1, col2 = st.columns(2)
-
-    col1.metric("Rows", df.shape[0])
-    col2.metric("Columns", df.shape[1])
-
-    st.write("### Dataset")
+    top_10 = df.sort_values(
+        by="Score",
+        ascending=False
+    ).head(10)
 
     st.dataframe(
-        df,
+        top_10[["Country or region", "Score"]],
         use_container_width=True,
         hide_index=True
     )
 
-    st.write("### Missing Values")
+    fig, ax = plt.subplots(figsize=(10, 6))
+
+    sns.barplot(
+        data=top_10,
+        x="Score",
+        y="Country or region",
+        ax=ax
+    )
+
+    ax.set_title("Top 10 Happiest Countries")
+    ax.set_xlabel("Happiness Score")
+    ax.set_ylabel("Country")
+
+    st.pyplot(fig)
+
+# ------------------------------------------
+# Dataset
+# ------------------------------------------
+
+elif choice == "Dataset":
+
+    st.header("📋 Dataset")
+
+    st.subheader("First 5 Records")
+    st.dataframe(
+        df.head(),
+        use_container_width=True
+    )
+
+    st.subheader("Complete Dataset")
+    st.dataframe(
+        df,
+        use_container_width=True,
+        height=500
+    )
+
+    st.subheader("Dataset Information")
+
+    col1, col2 = st.columns(2)
+
+    col1.metric("Number of Rows", df.shape[0])
+    col2.metric("Number of Columns", df.shape[1])
+
+    st.subheader("Missing Values")
 
     missing = df.isnull().sum()
 
@@ -179,194 +141,253 @@ elif page == "Dataset":
         use_container_width=True
     )
 
-# -------------------- HAPPINESS FACTORS --------------------
+    st.subheader("Basic Statistics")
 
-elif page == "Happiness Factors":
+    st.dataframe(
+        df.describe(),
+        use_container_width=True
+    )
 
-    st.subheader("📈 Happiness Factor Analysis")
+# ------------------------------------------
+# Top and Bottom Countries
+# ------------------------------------------
 
-    available_factors = [
-        column for column in
-        [
-            "Economy_GDP",
-            "Family",
-            "Health_Life_Expectancy",
-            "Freedom",
-            "Trust_Government_Corruption",
-            "Generosity"
-        ]
-        if column in df.columns
+elif choice == "Top & Bottom Countries":
+
+    st.header("🏆 Country Happiness Ranking")
+
+    top_10 = df.sort_values(
+        by="Score",
+        ascending=False
+    ).head(10)
+
+    bottom_10 = df.sort_values(
+        by="Score",
+        ascending=True
+    ).head(10)
+
+    col1, col2 = st.columns(2)
+
+    with col1:
+        st.subheader("Top 10 Happiest Countries")
+
+        st.dataframe(
+            top_10[["Country or region", "Score"]],
+            use_container_width=True,
+            hide_index=True
+        )
+
+    with col2:
+        st.subheader("10 Lowest Happiness Countries")
+
+        st.dataframe(
+            bottom_10[["Country or region", "Score"]],
+            use_container_width=True,
+            hide_index=True
+        )
+
+# ------------------------------------------
+# Correlation Analysis
+# ------------------------------------------
+
+elif choice == "Correlation Analysis":
+
+    st.header("🔥 Correlation Analysis")
+
+    columns = [
+        "Score",
+        "GDP per capita",
+        "Social support",
+        "Healthy life expectancy",
+        "Freedom to make life choices",
+        "Generosity",
+        "Perceptions of corruption"
     ]
 
-    if not available_factors:
-        st.warning("No happiness factor columns were found.")
-        st.stop()
+    correlation = df[columns].corr()
 
-    factor = st.selectbox(
-        "Select Factor",
-        available_factors
+    st.subheader("Correlation Table")
+
+    st.dataframe(
+        correlation.round(2),
+        use_container_width=True
     )
 
-    fig, ax = plt.subplots(figsize=(9, 5))
-
-    sns.regplot(
-        data=df,
-        x=factor,
-        y="Happiness_Score",
-        scatter_kws={"alpha": 0.6},
-        ax=ax
-    )
-
-    ax.set_title(
-        f"{factor} vs Happiness Score"
-    )
-
-    ax.set_xlabel(factor)
-    ax.set_ylabel("Happiness Score")
-
-    st.pyplot(fig)
-
-    correlation = df[[factor, "Happiness_Score"]].corr().iloc[0, 1]
-
-    st.info(
-        f"Correlation between {factor} and Happiness Score: "
-        f"{correlation:.2f}"
-    )
-
-# -------------------- COUNTRY ANALYSIS --------------------
-
-elif page == "Country Analysis":
-
-    st.subheader("🌍 Country Analysis")
-
-    if "Country" not in df.columns:
-        st.warning("Country column was not found.")
-        st.stop()
-
-    country = st.selectbox(
-        "Select Country",
-        sorted(df["Country"].dropna().unique())
-    )
-
-    country_data = df[df["Country"] == country].iloc[0]
-
-    st.write(f"### {country}")
-
-    col1, col2, col3 = st.columns(3)
-
-    col1.metric(
-        "Happiness Score",
-        round(country_data["Happiness_Score"], 2)
-    )
-
-    if "Economy_GDP" in df.columns:
-        col2.metric(
-            "Economy / GDP",
-            round(country_data["Economy_GDP"], 2)
-        )
-
-    if "Freedom" in df.columns:
-        col3.metric(
-            "Freedom",
-            round(country_data["Freedom"], 2)
-        )
-
-    factor_values = {}
-
-    for factor in [
-        "Economy_GDP",
-        "Family",
-        "Health_Life_Expectancy",
-        "Freedom",
-        "Trust_Government_Corruption",
-        "Generosity"
-    ]:
-        if factor in df.columns:
-            factor_values[factor] = country_data[factor]
-
-    if factor_values:
-        chart_data = pd.DataFrame(
-            {
-                "Factor": list(factor_values.keys()),
-                "Value": list(factor_values.values())
-            }
-        )
-
-        st.bar_chart(
-            chart_data.set_index("Factor")
-        )
-
-# -------------------- REGIONAL ANALYSIS --------------------
-
-elif page == "Regional Analysis":
-
-    st.subheader("🗺️ Regional Happiness Analysis")
-
-    if "Region" not in df.columns:
-        st.warning("Region column was not found.")
-        st.stop()
-
-    region_data = (
-        df.groupby("Region")["Happiness_Score"]
-        .mean()
-        .sort_values(ascending=False)
-    )
-
-    st.write("### Average Happiness Score by Region")
-
-    st.bar_chart(region_data)
-
-    st.write("### Regional Distribution")
-
-    fig, ax = plt.subplots(figsize=(12, 7))
-
-    sns.boxplot(
-        data=df,
-        x="Happiness_Score",
-        y="Region",
-        ax=ax
-    )
-
-    ax.set_title(
-        "Happiness Score Distribution by Region - 2015"
-    )
-
-    ax.set_xlabel("Happiness Score")
-    ax.set_ylabel("Region")
-
-    st.pyplot(fig)
-
-# -------------------- HEATMAP --------------------
-
-elif page == "Correlation Heatmap":
-
-    st.subheader("🔥 Correlation Heatmap")
-
-    heatmap_columns = [
-        column for column in numeric_columns
-        if column in df.columns
-    ]
-
-    correlation = df[heatmap_columns].corr()
+    st.subheader("Correlation Heatmap")
 
     fig, ax = plt.subplots(figsize=(10, 7))
 
     sns.heatmap(
         correlation,
         annot=True,
-        fmt=".2f",
         cmap="coolwarm",
-        linewidths=0.5,
+        fmt=".2f",
+        ax=ax
+    )
+
+    ax.set_title("Correlation Between Happiness Factors")
+
+    st.pyplot(fig)
+
+    st.subheader("Individual Correlations")
+
+    col1, col2 = st.columns(2)
+
+    gdp_corr = df["Score"].corr(
+        df["GDP per capita"]
+    )
+
+    social_corr = df["Score"].corr(
+        df["Social support"]
+    )
+
+    life_corr = df["Score"].corr(
+        df["Healthy life expectancy"]
+    )
+
+    freedom_corr = df["Score"].corr(
+        df["Freedom to make life choices"]
+    )
+
+    col1.metric(
+        "Happiness ↔ GDP",
+        round(gdp_corr, 2)
+    )
+
+    col2.metric(
+        "Happiness ↔ Social Support",
+        round(social_corr, 2)
+    )
+
+    col1.metric(
+        "Happiness ↔ Life Expectancy",
+        round(life_corr, 2)
+    )
+
+    col2.metric(
+        "Happiness ↔ Freedom",
+        round(freedom_corr, 2)
+    )
+
+# ------------------------------------------
+# Happiness Factors
+# ------------------------------------------
+
+elif choice == "Happiness Factors":
+
+    st.header("📈 Happiness Factor Analysis")
+
+    factor_names = {
+        "GDP per capita": "GDP per Capita",
+        "Social support": "Social Support",
+        "Healthy life expectancy": "Life Expectancy",
+        "Freedom to make life choices": "Freedom",
+        "Generosity": "Generosity",
+        "Perceptions of corruption": "Perceptions of Corruption"
+    }
+
+    factor = st.selectbox(
+        "Select Happiness Factor",
+        list(factor_names.keys())
+    )
+
+    fig, ax = plt.subplots(figsize=(9, 6))
+
+    sns.scatterplot(
+        data=df,
+        x=factor,
+        y="Score",
         ax=ax
     )
 
     ax.set_title(
-        "Correlation Heatmap of Happiness Factors - 2015"
+        f"{factor_names[factor]} vs Happiness Score"
     )
+
+    ax.set_xlabel(factor_names[factor])
+    ax.set_ylabel("Happiness Score")
 
     st.pyplot(fig)
 
-# -------------------- FOOTER --------------------
+    correlation = df["Score"].corr(
+        df[factor]
+    )
+
+    st.info(
+        f"Correlation between Happiness and "
+        f"{factor_names[factor]}: {correlation:.2f}"
+    )
+
+# ------------------------------------------
+# Average Values
+# ------------------------------------------
+
+elif choice == "Average Values":
+
+    st.header("📊 Average Values")
+
+    col1, col2 = st.columns(2)
+
+    col1.metric(
+        "Average Happiness",
+        round(df["Score"].mean(), 2)
+    )
+
+    col2.metric(
+        "Average GDP",
+        round(df["GDP per capita"].mean(), 2)
+    )
+
+    col1.metric(
+        "Average Social Support",
+        round(df["Social support"].mean(), 2)
+    )
+
+    col2.metric(
+        "Average Life Expectancy",
+        round(df["Healthy life expectancy"].mean(), 2)
+    )
+
+    col1.metric(
+        "Average Freedom",
+        round(df["Freedom to make life choices"].mean(), 2)
+    )
+
+    col2.metric(
+        "Average Generosity",
+        round(df["Generosity"].mean(), 2)
+    )
+
+    st.subheader("Average Factor Values")
+
+    average_data = pd.DataFrame({
+        "Factor": [
+            "Happiness",
+            "GDP",
+            "Social Support",
+            "Life Expectancy",
+            "Freedom",
+            "Generosity"
+        ],
+        "Average Value": [
+            df["Score"].mean(),
+            df["GDP per capita"].mean(),
+            df["Social support"].mean(),
+            df["Healthy life expectancy"].mean(),
+            df["Freedom to make life choices"].mean(),
+            df["Generosity"].mean()
+        ]
+    })
+
+    st.dataframe(
+        average_data.round(2),
+        use_container_width=True,
+        hide_index=True
+    )
+
+# ------------------------------------------
+# Footer
+# ------------------------------------------
 
 st.sidebar.markdown("---")
-st.sidebar.info("Global Happiness Report Analysis | 2015")
+st.sidebar.info("Global Happiness Report Analysis | 2019")
