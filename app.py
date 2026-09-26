@@ -235,7 +235,7 @@ elif choice == "Correlation Analysis":
     col1, col2 = st.columns(2)
 
     gdp_corr = df["Score"].corr(
-        df["Social support"]
+        df["Positive affect"]
     )
 
     social_corr = df["Score"].corr(
@@ -243,11 +243,11 @@ elif choice == "Correlation Analysis":
     )
 
     life_corr = df["Score"].corr(
-        df["Healthy life expectancy"]
+        df["Negative affect"]
     )
 
     freedom_corr = df["Score"].corr(
-        df["Freedom to make life choices"]
+        df["Freedom"]
     )
 
     col1.metric(
