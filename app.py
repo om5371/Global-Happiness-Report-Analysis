@@ -336,7 +336,7 @@ elif choice == "Average Values":
 
     col2.metric(
         "Average GDP",
-        round(df["GDP per capita"].mean(), 2)
+        round(df["Positive affect"].mean(), 2)
     )
 
     col1.metric(
@@ -346,12 +346,12 @@ elif choice == "Average Values":
 
     col2.metric(
         "Average Life Expectancy",
-        round(df["Healthy life expectancy"].mean(), 2)
+        round(df["Negative affect"].mean(), 2)
     )
 
     col1.metric(
         "Average Freedom",
-        round(df["Freedom to make life choices"].mean(), 2)
+        round(df["Freedom"].mean(), 2)
     )
 
     col2.metric(
@@ -363,19 +363,21 @@ elif choice == "Average Values":
 
     average_data = pd.DataFrame({
         "Factor": [
-            "Happiness",
-            "GDP",
+            "Score",
+            "Positive affect",
+            "Negative affect",
             "Social Support",
-            "Life Expectancy",
             "Freedom",
+            "Corruption",
             "Generosity"
         ],
         "Average Value": [
             df["Score"].mean(),
-            df["GDP per capita"].mean(),
+            df["Positive affect"].mean(),
+            df["Negative affect"].mean(),
             df["Social support"].mean(),
-            df["Healthy life expectancy"].mean(),
-            df["Freedom to make life choices"].mean(),
+            df["Freedom"].mean(),
+            df["Corruption"].mean(),
             df["Generosity"].mean()
         ]
     })
