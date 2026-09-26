@@ -235,7 +235,7 @@ elif choice == "Correlation Analysis":
     col1, col2 = st.columns(2)
 
     gdp_corr = df["Score"].corr(
-        df["GDP per capita"]
+        df["Social support"]
     )
 
     social_corr = df["Score"].corr(
@@ -279,12 +279,12 @@ elif choice == "Happiness Factors":
     st.header("📈 Happiness Factor Analysis")
 
     factor_names = {
-        "GDP per capita": "GDP per Capita",
         "Social support": "Social Support",
-        "Healthy life expectancy": "Life Expectancy",
-        "Freedom to make life choices": "Freedom",
-        "Generosity": "Generosity",
-        "Perceptions of corruption": "Perceptions of Corruption"
+        "Positive affect": "Positive affect",
+        "Negative affect": "Negative affect",
+        "Freedom": "Freedom",
+        "Corruption": "Corruption",
+        "Generosity": "Generosity"
     }
 
     factor = st.selectbox(
