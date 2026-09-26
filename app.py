@@ -196,9 +196,9 @@ elif choice == "Correlation Analysis":
 
     columns = [
         "Score",
-        "SD of Score",
+        "SD of Ladder",
         "Positive affect",
-        "Nagative affect",
+        "Negative affect",
         "Social support",
         "Freedom",
         "Corruption",
