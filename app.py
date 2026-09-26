@@ -196,12 +196,13 @@ elif choice == "Correlation Analysis":
 
     columns = [
         "Score",
-        "GDP per capita",
+        "SD of Score",
+        "Positive affect",
+        "Nagative affect",
         "Social support",
-        "Healthy life expectancy",
-        "Freedom to make life choices",
-        "Generosity",
-        "Perceptions of corruption"
+        "Freedom",
+        "Corruption",
+        "Generosity"
     ]
 
     correlation = df[columns].corr()
